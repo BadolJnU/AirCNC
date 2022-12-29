@@ -1,12 +1,15 @@
 import React, { useContext } from 'react'
 import toast from 'react-hot-toast'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import PrimaryButton from '../../Components/Button/PrimaryButton'
 import { AuthContext } from '../../contexts/AuthProvider'
+import SmallSpinner from '../../Components/Spinner/SmallSpinner'
 
 const Signup = () => {
   const {createUser, updateUserProfile, verifyEmail, loading, setLoading, signInWithGoogle} = useContext(AuthContext)
-
+  const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/'
   const handleSubmit = event => {
     event.preventDefault();
     const name = event.target.name.value;
@@ -34,11 +37,15 @@ const Signup = () => {
           .then(res => {
             toast.success('Please Check your Email for verification link')
             event.target.reset();
+            navigate('/login')
           })
           .catch(error => console.log(error))
         })
       })
-      .catch(error => console.log(error))
+      .catch(error => {
+        toast.error(error.message)
+        setLoading(false)
+      })
     })
     .catch(error => console.log(error))
     
@@ -46,8 +53,11 @@ const Signup = () => {
 
   const handleGoogleSignIn = () => {
     signInWithGoogle()
-    .then(result => console.log(result.user))
+    .then(result => {
+      navigate(from, {replace: true})
+    })
     .catch(error => console.log(error))
+
   }
   return (
     <div className='flex justify-center items-center pt-8'>
@@ -125,7 +135,9 @@ const Signup = () => {
                 type='submit'
                 classes='w-full px-8 py-3 font-semibold rounded-md bg-gray-900 hover:bg-gray-700 hover:text-white text-gray-100'
               >
-                Sign up
+                {
+                loading? <SmallSpinner/> : 'Sign Up'
+              }
               </PrimaryButton>
             </div>
           </div>
