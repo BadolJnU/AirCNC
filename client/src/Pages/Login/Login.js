@@ -1,12 +1,14 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import PrimaryButton from '../../Components/Button/PrimaryButton'
 import { AuthContext } from '../../contexts/AuthProvider'
 import SmallSpinner from '../../Components/Spinner/SmallSpinner'
+import { setauthToken } from '../../api/auth'
 
 const Login = () => {
-  const {signin, loading, setLoading, signInWithGoogle} = useContext(AuthContext)
+  const {signin, loading, setLoading, signInWithGoogle, resetPassword} = useContext(AuthContext)
+  const [userEmail, setUserEmail] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
@@ -19,6 +21,8 @@ const Login = () => {
     .then(res => {
       toast.success('Login Successfully....')
       event.target.reset()
+      //get jwt token
+      setauthToken(res.user)
       navigate(from, {replace: true})
     })
     .catch(error => {
@@ -31,9 +35,22 @@ const Login = () => {
   const handleGoogleSignIn = () => {
     signInWithGoogle()
     .then(result => {
+      setauthToken(result.user)
       navigate(from, {replace: true})
     })
     .catch(error => console.log(error))
+  }
+
+  //reset user password
+  const handleResetPassword = () => {
+    resetPassword(userEmail)
+    .then(res => {
+      toast.success("Please check your email to set the new password...")
+    })
+    .catch(error => {
+      toast.error(error.message)
+      setLoading(false)
+    })
   }
   return (
     <div className='flex justify-center items-center pt-8'>
@@ -56,6 +73,7 @@ const Login = () => {
                 Email address
               </label>
               <input
+                onBlur={(event) => setUserEmail(event.target.value)}
                 type='email'
                 name='email'
                 id='email'
@@ -94,7 +112,7 @@ const Login = () => {
           </div>
         </form>
         <div className='space-y-1'>
-          <button className='text-xs hover:underline text-gray-400'>
+          <button className='text-xs hover:underline text-gray-400' onClick={handleResetPassword}>
             Forgot password?
           </button>
         </div>
